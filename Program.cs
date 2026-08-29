@@ -5,8 +5,20 @@
         static void Main(string[] args)
         {
             //NOTE: The Program entry is here
-            Console.Write("collabify> ");
-            string? input = Console.ReadLine();
+
+            string? input;
+
+            var commandHandler = new CommandHandler();
+
+            do
+            {
+                Console.Write("collabify> ");
+
+                input = Console.ReadLine();
+
+                commandHandler.Handle(input);
+
+            } while (input != "exit");
         }
     }
 }
