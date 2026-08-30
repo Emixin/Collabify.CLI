@@ -10,6 +10,14 @@ public class CommandHandler
     {
         switch (command)
         {
+            case "login":
+                Console.WriteLine("Logging in ...");
+                break;
+
+            case "logout":
+                Console.WriteLine("logging out ...");
+                break;
+
             case "help":
                 Console.WriteLine("Showing help ...");
                 break;
