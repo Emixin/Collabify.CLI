@@ -1,37 +1,27 @@
+using System.Buffers.Text;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace Collabify.CLI;
 
 
-//NOTE: Define Services here
-
-public class UserService
+//NOTE: Defined a class for storing cookies.
+public class APIsClient
 {
-    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/get_users";
-    public async Task<List<string>> GetUsers()
+    private readonly HttpClientHandler HttpClientHandlerWithCookie = new()
     {
-        var client = new HttpClient();
+        CookieContainer = new CookieContainer()
+    };
 
-        var response = await client.GetAsync(BaseUrl);
+    private readonly HttpClient client;
 
-        response.EnsureSuccessStatusCode();
-
-        var getUserResponse = await response.Content.ReadFromJsonAsync<GetUsersResponse>() ?? new GetUsersResponse();
-
-        var usersList = getUserResponse.UsersList ?? [];
-
-        return usersList;
+    public APIsClient()
+    {
+        client = new HttpClient(HttpClientHandlerWithCookie);
     }
-}
 
-
-public class LoginUserService
-{
-    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/login";
-    public async Task<string> LoginUser(string username, string password)
+    public async Task<string> LoginUserAPI(string username, string password, string BaseUrl)
     {
-        var client = new HttpClient();
-
         var loginrequest = new LoginUserRequest { Username = username, Password = password };
 
         var response = await client.PostAsJsonAsync(BaseUrl, loginrequest);
@@ -44,9 +34,63 @@ public class LoginUserService
 
         return message;
     }
+
+    public async Task<List<string>> GetUsersAPI(string BaseUrl)
+    {
+        var response = await client.GetAsync(BaseUrl);
+
+        response.EnsureSuccessStatusCode();
+
+        var getUserResponse = await response.Content.ReadFromJsonAsync<GetUsersResponse>() ?? new GetUsersResponse();
+
+        var usersList = getUserResponse.UsersList ?? [];
+
+        return usersList;
+    }
+
 }
 
 
+public class LoginUserService
+{
+    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/login";
+
+    private readonly APIsClient httpClientContainer;
+
+    public LoginUserService(APIsClient client)
+    {
+        httpClientContainer = client;
+    }
+
+    public async Task<string> LoginUser(string username, string password)
+    {
+        var message = await httpClientContainer.LoginUserAPI(username, password, BaseUrl);
+        return message;
+    }
+}
+
+
+//FIX: GetUsers returns 401 even for a logged in user!
+public class UserService
+{
+    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/get_users";
+
+    private readonly APIsClient httpClientContainer;
+
+    public UserService(APIsClient client)
+    {
+        httpClientContainer = client;
+    }
+
+    public async Task<List<string>> GetUsers()
+    {
+        var usersList = await httpClientContainer.GetUsersAPI(BaseUrl);
+        return usersList;
+    }
+}
+
+
+//TODO: Complete it later.
 public class CreateTeamservice
 {
     private string BaseUrl { get; set; } = "http://localhost:8080/APIs/create_team";
