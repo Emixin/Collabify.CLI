@@ -20,32 +20,39 @@ public class APIsClient
         client = new HttpClient(HttpClientHandlerWithCookie);
     }
 
-    public async Task<string> LoginUserAPI(string username, string password, string BaseUrl)
+    public async Task<(string, HttpStatusCode)> LoginUserAPI(string username, string password, string BaseUrl)
     {
         var loginrequest = new LoginUserRequest { Username = username, Password = password };
 
         var response = await client.PostAsJsonAsync(BaseUrl, loginrequest);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            return ("Login failed!", response.StatusCode);
+        }
 
         var loginUserResponse = await response.Content.ReadFromJsonAsync<LoginUserResponse>() ?? new LoginUserResponse();
 
         var message = loginUserResponse.Message ?? "";
 
-        return message;
+        return (message, HttpStatusCode.OK);
     }
 
-    public async Task<List<string>> GetUsersAPI(string BaseUrl)
+    public async Task<(List<string>, HttpStatusCode)> GetUsersAPI(string BaseUrl)
     {
         var response = await client.GetAsync(BaseUrl);
 
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            List<string> emptyList = new();
+            return (emptyList, response.StatusCode);
+        }
 
         var getUserResponse = await response.Content.ReadFromJsonAsync<GetUsersResponse>() ?? new GetUsersResponse();
 
         var usersList = getUserResponse.UsersList ?? [];
 
-        return usersList;
+        return (usersList, response.StatusCode);
     }
 
 }
@@ -62,7 +69,7 @@ public class LoginUserService
         httpClientContainer = client;
     }
 
-    public async Task<string> LoginUser(string username, string password)
+    public async Task<(string, HttpStatusCode)> LoginUser(string username, string password)
     {
         var message = await httpClientContainer.LoginUserAPI(username, password, BaseUrl);
         return message;
@@ -82,7 +89,7 @@ public class UserService
         httpClientContainer = client;
     }
 
-    public async Task<List<string>> GetUsers()
+    public async Task<(List<string>, HttpStatusCode)> GetUsers()
     {
         var usersList = await httpClientContainer.GetUsersAPI(BaseUrl);
         return usersList;

@@ -39,7 +39,7 @@ public class CommandHandler
                 }
 
                 var loginUserService = new LoginUserService(cookieContainedClient);
-                string message = await loginUserService.LoginUser(username, password);
+                var message = await loginUserService.LoginUser(username, password);
                 Console.WriteLine(message);
 
                 break;
@@ -65,7 +65,7 @@ public class CommandHandler
 
                 //TODO: Use Previous userService created after user login instead of creating new instance.
                 UserService userService = new(cookieContainedClient);
-                List<string> usersList = await userService.GetUsers();
+                var usersList = await userService.GetUsers();
                 Console.WriteLine(string.Join("\n", usersList));
                 break;
 
