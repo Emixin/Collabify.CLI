@@ -41,37 +41,37 @@ public class UserTests
 public class CommandHandlerTests
 {
     [Fact]
-    public void HelpCommand_ShowsHelp()
+    public async Task HelpCommand_ShowsHelp()
     {
         var writer = new StringWriter();
-        var commandHandler = new CommandHandler();
+        var commandHandler = new CommandHandler(new APIsClient());
 
         Console.SetOut(writer);
-        commandHandler.Handle("help");
+        await commandHandler.Handle("help");
 
         Assert.Equal("Showing help ..." + Environment.NewLine, writer.ToString());
     }
 
     [Fact]
-    public void TeamsCommand_GetsTeams()
+    public async Task TeamsCommand_GetsTeams()
     {
         var writer = new StringWriter();
-        var commandHandler = new CommandHandler();
+        var commandHandler = new CommandHandler(new APIsClient());
 
         Console.SetOut(writer);
-        commandHandler.Handle("teams");
+        await commandHandler.Handle("teams");
 
         Assert.Equal("Getting teams ..." + Environment.NewLine, writer.ToString());
     }
 
     [Fact]
-    public void EmptyCommand_DoesNothing()
+    public async Task EmptyCommand_DoesNothing()
     {
         var writer = new StringWriter();
-        var commandHandler = new CommandHandler();
+        var commandHandler = new CommandHandler(new APIsClient());
 
         Console.SetOut(writer);
-        commandHandler.Handle("");
+        await commandHandler.Handle("");
 
         Assert.Equal("", writer.ToString());
     }
