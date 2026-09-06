@@ -2,13 +2,13 @@
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             //NOTE: The Program entry is here
 
             string? input;
 
-            var commandHandler = new CommandHandler();
+            var commandHandler = new CommandHandler(new APIsClient());
 
             do
             {
@@ -16,8 +16,8 @@
 
                 input = Console.ReadLine();
 
-                commandHandler.Handle(input);
-
+                await commandHandler.Handle(input);
+                
             } while (input != "exit");
         }
     }
