@@ -6,6 +6,8 @@
         {
             //NOTE: The Program entry is here
 
+            DotNetEnv.Env.Load();
+
             string? input;
 
             var commandHandler = new CommandHandler(new APIsClient());

@@ -20,11 +20,22 @@ public class APIsClient
         client = new HttpClient(HttpClientHandlerWithCookie);
     }
 
-    public async Task<(string, HttpStatusCode)> LoginUserAPI(string username, string password, string BaseUrl)
+    public async Task<(string, HttpStatusCode?)> LoginUserAPI(string username, string password, string BaseUrl)
     {
         var loginrequest = new LoginUserRequest { Username = username, Password = password };
 
-        var response = await client.PostAsJsonAsync(BaseUrl, loginrequest);
+        HttpResponseMessage response;
+
+        try
+        {
+            response = await client.PostAsJsonAsync(BaseUrl, loginrequest);
+
+        }
+
+        catch (HttpRequestException)
+        {
+            return ("Connection failed!", null);
+        }
 
         if (!response.IsSuccessStatusCode)
         {
@@ -38,9 +49,19 @@ public class APIsClient
         return (message, HttpStatusCode.OK);
     }
 
-    public async Task<(List<string>, HttpStatusCode)> GetUsersAPI(string BaseUrl)
+    public async Task<(List<string>, HttpStatusCode?)> GetUsersAPI(string BaseUrl)
     {
-        var response = await client.GetAsync(BaseUrl);
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.GetAsync(BaseUrl);
+        }
+
+        catch (HttpRequestException)
+        {
+            List<string> emptyList = new();
+            return (emptyList, null);
+        }
 
         if (!response.IsSuccessStatusCode)
         {
@@ -60,8 +81,6 @@ public class APIsClient
 
 public class LoginUserService
 {
-    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/login";
-
     private readonly APIsClient httpClientContainer;
 
     public LoginUserService(APIsClient client)
@@ -69,10 +88,11 @@ public class LoginUserService
         httpClientContainer = client;
     }
 
-    public async Task<(string, HttpStatusCode)> LoginUser(string username, string password)
+    public async Task<(string, HttpStatusCode?)> LoginUser(string username, string password)
     {
-        var message = await httpClientContainer.LoginUserAPI(username, password, BaseUrl);
-        return message;
+        var baseUrl = Environment.GetEnvironmentVariable("COLLABIFY_API_URL") ?? "";
+        var messageStatusCodeContained = await httpClientContainer.LoginUserAPI(username, password, baseUrl + "/login");
+        return messageStatusCodeContained;
     }
 }
 
@@ -80,8 +100,6 @@ public class LoginUserService
 //FIX: GetUsers returns 401 even for a logged in user!
 public class UserService
 {
-    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/get_users";
-
     private readonly APIsClient httpClientContainer;
 
     public UserService(APIsClient client)
@@ -89,10 +107,11 @@ public class UserService
         httpClientContainer = client;
     }
 
-    public async Task<(List<string>, HttpStatusCode)> GetUsers()
+    public async Task<(List<string>, HttpStatusCode?)> GetUsers()
     {
-        var usersList = await httpClientContainer.GetUsersAPI(BaseUrl);
-        return usersList;
+        var baseUrl = Environment.GetEnvironmentVariable("COLLABIFY_API_URL") ?? "";
+        var usersListStatusCodeContained = await httpClientContainer.GetUsersAPI(baseUrl + "/get_users");
+        return usersListStatusCodeContained;
     }
 }
 
@@ -100,15 +119,14 @@ public class UserService
 //TODO: Complete it later.
 public class CreateTeamservice
 {
-    private string BaseUrl { get; set; } = "http://localhost:8080/APIs/create_team";
-
     public async Task<string> CreateTeam(string name, int maxMembers)
     {
         var client = new HttpClient();
 
         var createTeamRequest = new CreateTeamRequest { Name = name, MaxMembers = maxMembers };
 
-        var response = await client.PostAsJsonAsync(BaseUrl, createTeamRequest);
+        var baseUrl = Environment.GetEnvironmentVariable("COLLABIFY_API_URL") ?? "";
+        var response = await client.PostAsJsonAsync(baseUrl + "/create_team", createTeamRequest);
 
         response.EnsureSuccessStatusCode();
 

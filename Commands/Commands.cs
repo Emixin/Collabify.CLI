@@ -65,7 +65,8 @@ public class CommandHandler
 
                 //TODO: Use Previous userService created after user login instead of creating new instance.
                 UserService userService = new(cookieContainedClient);
-                var usersList = await userService.GetUsers();
+                var (usersList, statusCode) = await userService.GetUsers();
+                Console.WriteLine($"status: {statusCode}");
                 Console.WriteLine(string.Join("\n", usersList));
                 break;
 
