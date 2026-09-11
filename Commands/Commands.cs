@@ -7,11 +7,37 @@ namespace Collabify.CLI;
 public class CommandHandler
 {
 
-    private readonly APIsClient cookieContainedClient;
+    private readonly IAPIsClient cookieContainedClient;
 
-    public CommandHandler(APIsClient client)
+    public CommandHandler(IAPIsClient client)
     {
         cookieContainedClient = client;
+    }
+
+    private static string ReadPassword()
+    {
+        string password = "";
+
+        if (Console.IsInputRedirected)
+        {
+            password = Console.ReadLine() ?? "";
+            return password;
+        }
+
+        ConsoleKeyInfo key;
+        while (true)
+        {
+            key = Console.ReadKey(true);
+
+            if (key.Key == ConsoleKey.Enter)
+            {
+                break;
+            }
+
+            password += key.KeyChar;
+        }
+
+        return password;
     }
 
     public async Task Handle(string? command)
@@ -23,20 +49,7 @@ public class CommandHandler
                 string username = Console.ReadLine() ?? "";
 
                 Console.Write("Password: ");
-                string password = "";
-
-                ConsoleKeyInfo key;
-                while (true)
-                {
-                    key = Console.ReadKey(true);
-
-                    if (key.Key == ConsoleKey.Enter)
-                    {
-                        break;
-                    }
-
-                    password += key.KeyChar;
-                }
+                var password = ReadPassword();
 
                 var loginUserService = new LoginUserService(cookieContainedClient);
                 var message = await loginUserService.LoginUser(username, password);
@@ -63,7 +76,6 @@ public class CommandHandler
             case "users":
                 Console.WriteLine("Getting users ...");
 
-                //TODO: Use Previous userService created after user login instead of creating new instance.
                 UserService userService = new(cookieContainedClient);
                 var (usersList, statusCode) = await userService.GetUsers();
                 Console.WriteLine($"status: {statusCode}");

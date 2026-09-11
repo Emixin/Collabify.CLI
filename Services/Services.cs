@@ -1,12 +1,14 @@
 using System.Buffers.Text;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 
 namespace Collabify.CLI;
 
 
-//NOTE: Defined a class for storing cookies.
-public class APIsClient
+//NOTE: Defined a class responsible for managing cookies
+//TODO: Define an interface to follow abstraction and dependency inversion principles
+public class APIsClient : IAPIsClient
 {
     private readonly HttpClientHandler HttpClientHandlerWithCookie = new()
     {
@@ -20,7 +22,7 @@ public class APIsClient
         client = new HttpClient(HttpClientHandlerWithCookie);
     }
 
-    public async Task<(string, HttpStatusCode?)> LoginUserAPI(string username, string password, string BaseUrl)
+    public async Task<(string, HttpStatusCode?)> LoginUserAPI(string username, string password, string? BaseUrl)
     {
         var loginrequest = new LoginUserRequest { Username = username, Password = password };
 
@@ -29,7 +31,6 @@ public class APIsClient
         try
         {
             response = await client.PostAsJsonAsync(BaseUrl, loginrequest);
-
         }
 
         catch (HttpRequestException)
@@ -49,7 +50,7 @@ public class APIsClient
         return (message, HttpStatusCode.OK);
     }
 
-    public async Task<(List<string>, HttpStatusCode?)> GetUsersAPI(string BaseUrl)
+    public async Task<(List<string>, HttpStatusCode?)> GetUsersAPI(string? BaseUrl)
     {
         HttpResponseMessage response;
         try
@@ -81,9 +82,9 @@ public class APIsClient
 
 public class LoginUserService
 {
-    private readonly APIsClient httpClientContainer;
+    private readonly IAPIsClient httpClientContainer;
 
-    public LoginUserService(APIsClient client)
+    public LoginUserService(IAPIsClient client)
     {
         httpClientContainer = client;
     }
@@ -97,12 +98,11 @@ public class LoginUserService
 }
 
 
-//FIX: GetUsers returns 401 even for a logged in user!
 public class UserService
 {
-    private readonly APIsClient httpClientContainer;
+    private readonly IAPIsClient httpClientContainer;
 
-    public UserService(APIsClient client)
+    public UserService(IAPIsClient client)
     {
         httpClientContainer = client;
     }
